@@ -35,7 +35,11 @@ public class BgValue {
         long now = System.currentTimeMillis();
         String today = day.format(new Timestamp((now)));
         try {
-            timestamp = Timestamp.valueOf(ts.format(formatter.parse(today + " " + hhmm)));
+            this.timestamp = Timestamp.valueOf(ts.format(formatter.parse(today + " " + hhmm)));
+            if (this.timestamp.getTime() > now && hhmm.startsWith("23")) {
+                // Set it to yesterday.
+                this.timestamp.setTime(this.timestamp.getTime() - 86400000L);
+            }
         } catch (Exception e) {
             Log.e(TAG, "Error parse " + hhmm);
             timestamp = new Timestamp(now);

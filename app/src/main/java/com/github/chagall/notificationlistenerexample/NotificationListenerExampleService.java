@@ -76,7 +76,7 @@ public class NotificationListenerExampleService extends NotificationListenerServ
         trendMap.put("\u21ca", "DoubleDown");
 
         StatusBarNotification[] activeNotifications = getActiveNotifications();
-        Log.e(TAG, "v09181200 Current active notifications: " + activeNotifications.length);
+        Log.e(TAG, "v09181820 Current active notifications: " + activeNotifications.length);
         for (int i = 0; i < activeNotifications.length; ++i) {
             onNotificationPosted(activeNotifications[i]);
         }
@@ -166,12 +166,6 @@ public class NotificationListenerExampleService extends NotificationListenerServ
             Log.e(TAG, "TEXT NOT EXTRACTED: " + notifyText);
             return null;
         }
-        Log.e(TAG, "TEXT EXTRACTED: " + m.group(0));
-        Log.e(TAG, "TEXT EXTRACTED: " + m.group(1));
-        Log.e(TAG, "TEXT EXTRACTED: " + m.group(2));
-        Log.e(TAG, "TEXT EXTRACTED: " + m.group(3));
-        Log.e(TAG, "TEXT EXTRACTED: " + m.group(4));
-
         BgValue bgValue = new BgValue();
         bgValue.setBgValue(m.group(2), "mmol");
         bgValue.setTimestamp(m.group(1));
