@@ -11,7 +11,9 @@ import android.provider.Settings;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.text.method.ScrollingMovementMethod;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 /**
  * MIT License
@@ -37,8 +39,9 @@ public class MainActivity extends AppCompatActivity {
     private static final String ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners";
     private static final String ACTION_NOTIFICATION_LISTENER_SETTINGS = "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS";
 
-    private ImageView interceptedNotificationImageView;
-    private ImageChangeBroadcastReceiver imageChangeBroadcastReceiver;
+//    private ImageView interceptedNotificationImageView;
+    private TextView logTextView;
+    private LogBroadcastReceiver logBroadcastReceiver;
     private AlertDialog enableNotificationListenerAlertDialog;
 
     @Override
@@ -46,9 +49,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Here we get a reference to the image we will modify when a notification is received
-        interceptedNotificationImageView
-                = (ImageView) this.findViewById(R.id.intercepted_notification_logo);
+        logTextView = (TextView) this.findViewById(R.id.log_text_view);
+        logTextView.setMovementMethod(new ScrollingMovementMethod());
+        logTextView.setEllipsize(TextUtils.TruncateAt.START);
 
         // If the user did not turn the notification listener service on we prompt him to do so
         if(!isNotificationServiceEnabled()){
@@ -57,38 +60,16 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Finally we register a receiver to tell the MainActivity when a notification has been received
-        imageChangeBroadcastReceiver = new ImageChangeBroadcastReceiver();
+        logBroadcastReceiver = new LogBroadcastReceiver();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("com.github.chagall.notificationlistenerexample");
-        registerReceiver(imageChangeBroadcastReceiver,intentFilter);
+        registerReceiver(logBroadcastReceiver, intentFilter);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(imageChangeBroadcastReceiver);
-    }
-
-    /**
-     * Change Intercepted Notification Image
-     * Changes the MainActivity image based on which notification was intercepted
-     * @param notificationCode The intercepted notification code
-     */
-    private void changeInterceptedNotificationImage(int notificationCode){
-        switch(notificationCode){
-            case NotificationListenerExampleService.InterceptedNotificationCode.FACEBOOK_CODE:
-                interceptedNotificationImageView.setImageResource(R.drawable.facebook_logo);
-                break;
-            case NotificationListenerExampleService.InterceptedNotificationCode.INSTAGRAM_CODE:
-                interceptedNotificationImageView.setImageResource(R.drawable.instagram_logo);
-                break;
-            case NotificationListenerExampleService.InterceptedNotificationCode.WHATSAPP_CODE:
-                interceptedNotificationImageView.setImageResource(R.drawable.whatsapp_logo);
-                break;
-            case NotificationListenerExampleService.InterceptedNotificationCode.OTHER_NOTIFICATIONS_CODE:
-                interceptedNotificationImageView.setImageResource(R.drawable.other_notification_logo);
-                break;
-        }
+        unregisterReceiver(logBroadcastReceiver);
     }
 
     /**
@@ -121,11 +102,20 @@ public class MainActivity extends AppCompatActivity {
      * a new notification has arrived, so it can properly change the
      * notification image
      * */
-    public class ImageChangeBroadcastReceiver extends BroadcastReceiver {
+    public class LogBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            int receivedNotificationCode = intent.getIntExtra("Notification Code",-1);
-            changeInterceptedNotificationImage(receivedNotificationCode);
+            String log = intent.getStringExtra("log");
+            if (log == null) return;
+            logTextView.append(String.format("%s\n", log));
+
+            int lineCount = logTextView.getLineCount();
+            if (lineCount > 1000) {
+                int cutOff = logTextView.getLayout().getLineEnd(lineCount - 20);
+                CharSequence text = logTextView.getText();
+                text = text.subSequence(cutOff, text.length());
+                logTextView.setText(text);
+            }
         }
     }
 

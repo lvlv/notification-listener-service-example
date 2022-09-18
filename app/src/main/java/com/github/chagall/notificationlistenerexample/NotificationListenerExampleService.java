@@ -2,20 +2,16 @@ package com.github.chagall.notificationlistenerexample;
 
 import android.app.Notification;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
-import android.util.Log;
-import android.util.StringBuilderPrinter;
 
-import androidx.annotation.RequiresApi;
-
+import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,16 +37,13 @@ import java.util.regex.Pattern;
 public class NotificationListenerExampleService extends NotificationListenerService {
 
     private static String TAG = "NOTI_LISTENER";
+    private LOG Log = new LOG(this);
 
     /*
         These are the package names of the apps. for which we want to
         listen the notifications
      */
     private static final class ApplicationPackageNames {
-        public static final String FACEBOOK_PACK_NAME = "com.facebook.katana";
-        public static final String FACEBOOK_MESSENGER_PACK_NAME = "com.facebook.orca";
-        public static final String WHATSAPP_PACK_NAME = "com.whatsapp";
-        public static final String INSTAGRAM_PACK_NAME = "com.instagram.android";
         public static final String CGMCARE_PACK_NAME = "cn.cgmcare.app";
         public static final String XDRIP_PACK_NAME = "com.eveningoutpost.dexdrip";
     }
@@ -61,9 +54,6 @@ public class NotificationListenerExampleService extends NotificationListenerServ
      */
     public static final class InterceptedNotificationCode {
         public static final int OTHER_NOTIFICATIONS_CODE = 0; // We ignore all notification with code == 0
-        public static final int FACEBOOK_CODE = 1;
-        public static final int WHATSAPP_CODE = 2;
-        public static final int INSTAGRAM_CODE = 3;
         public static final int CGMCARE_CODE = 4;
         public static final int XDRIP_CODE = 5;
     }
@@ -86,21 +76,37 @@ public class NotificationListenerExampleService extends NotificationListenerServ
         trendMap.put("\u21ca", "DoubleDown");
 
         StatusBarNotification[] activeNotifications = getActiveNotifications();
-        Log.e(TAG, "Current active notifications: " + activeNotifications.length);
+        Log.e(TAG, "v09181200 Current active notifications: " + activeNotifications.length);
         for (int i = 0; i < activeNotifications.length; ++i) {
             onNotificationPosted(activeNotifications[i]);
+        }
+    }
+
+    private static class LOG {
+        private NotificationListenerExampleService service;
+
+        public LOG(NotificationListenerExampleService service) {
+            this.service = service;
+        }
+
+        private void sendLogBroadcast(String log) {
+            Intent intent = new Intent("com.github.chagall.notificationlistenerexample");
+            intent.putExtra("log", log);
+            service.sendBroadcast(intent);
+        }
+
+        public void e(String tag, String log) {
+            DateFormat ts = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String now = ts.format(new Timestamp(System.currentTimeMillis()));
+            android.util.Log.e(tag, log);
+            sendLogBroadcast(String.format("%s %s", now, log));
         }
     }
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         int notificationCode = matchNotificationCode(sbn);
-
-        if (notificationCode != InterceptedNotificationCode.OTHER_NOTIFICATIONS_CODE) {
-            Intent intent = new Intent("com.github.chagall.notificationlistenerexample");
-            intent.putExtra("Notification Code", notificationCode);
-            sendBroadcast(intent);
-        }
+        if (notificationCode == InterceptedNotificationCode.OTHER_NOTIFICATIONS_CODE) return;
         Log.e(TAG, "onNotificationPosted: " + sbn.getNotification().toString());
 
         if (notificationCode == InterceptedNotificationCode.CGMCARE_CODE &&
@@ -149,7 +155,6 @@ public class NotificationListenerExampleService extends NotificationListenerServ
         intent.putExtras(bundle);
         intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
         sendBroadcast(intent);
-        Log.e(TAG,"intent package: " + intent.getPackage());
         Log.e(TAG,"intent sent: " + intent.toString());
     }
 
@@ -178,40 +183,14 @@ public class NotificationListenerExampleService extends NotificationListenerServ
 
 
     @Override
-    public void onNotificationRemoved(StatusBarNotification sbn){
-        int notificationCode = matchNotificationCode(sbn);
-
-        if (notificationCode != InterceptedNotificationCode.OTHER_NOTIFICATIONS_CODE) {
-            StatusBarNotification[] activeNotifications = this.getActiveNotifications();
-            if(activeNotifications != null && activeNotifications.length > 0) {
-                for (int i = 0; i < activeNotifications.length; i++) {
-                    if (notificationCode == matchNotificationCode(activeNotifications[i])) {
-                        Intent intent = new  Intent("com.github.chagall.notificationlistenerexample");
-                        intent.putExtra("Notification Code", notificationCode);
-                        sendBroadcast(intent);
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    public void onNotificationRemoved(StatusBarNotification sbn) { }
 
     private int matchNotificationCode(StatusBarNotification sbn) {
         String packageName = sbn.getPackageName();
 
         Log.e(TAG, "matchNotificationCode: " + packageName);
 
-        if(packageName.equals(ApplicationPackageNames.FACEBOOK_PACK_NAME)
-                || packageName.equals(ApplicationPackageNames.FACEBOOK_MESSENGER_PACK_NAME)){
-            return(InterceptedNotificationCode.FACEBOOK_CODE);
-        }
-        else if(packageName.equals(ApplicationPackageNames.INSTAGRAM_PACK_NAME)){
-            return(InterceptedNotificationCode.INSTAGRAM_CODE);
-        }
-        else if(packageName.equals(ApplicationPackageNames.WHATSAPP_PACK_NAME)){
-            return(InterceptedNotificationCode.WHATSAPP_CODE);
-        }
-        else if(packageName.equals(ApplicationPackageNames.CGMCARE_PACK_NAME)){
+        if(packageName.equals(ApplicationPackageNames.CGMCARE_PACK_NAME)){
             return(InterceptedNotificationCode.CGMCARE_CODE);
         }
         else if(packageName.equals(ApplicationPackageNames.XDRIP_PACK_NAME)){
