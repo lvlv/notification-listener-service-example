@@ -15,6 +15,8 @@ import android.text.method.ScrollingMovementMethod;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 /**
  * MIT License
  *
@@ -40,27 +42,25 @@ public class MainActivity extends AppCompatActivity {
     private static final String ACTION_NOTIFICATION_LISTENER_SETTINGS = "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS";
 
 //    private ImageView interceptedNotificationImageView;
+    private ArrayList<String> listLog = new ArrayList();
+
     private TextView logTextView;
-    private LogBroadcastReceiver logBroadcastReceiver;
+    private LogBroadcastReceiver logBroadcastReceiver = new LogBroadcastReceiver();
     private AlertDialog enableNotificationListenerAlertDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         logTextView = (TextView) this.findViewById(R.id.log_text_view);
-        logTextView.setMovementMethod(new ScrollingMovementMethod());
-        logTextView.setEllipsize(TextUtils.TruncateAt.START);
 
         // If the user did not turn the notification listener service on we prompt him to do so
-        if(!isNotificationServiceEnabled()){
+        if (!isNotificationServiceEnabled()) {
             enableNotificationListenerAlertDialog = buildNotificationServiceAlertDialog();
             enableNotificationListenerAlertDialog.show();
         }
 
         // Finally we register a receiver to tell the MainActivity when a notification has been received
-        logBroadcastReceiver = new LogBroadcastReceiver();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("com.github.chagall.notificationlistenerexample");
         registerReceiver(logBroadcastReceiver, intentFilter);
@@ -107,15 +107,25 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             String log = intent.getStringExtra("log");
             if (log == null) return;
-            logTextView.append(String.format("%s\n", log));
-
-            int lineCount = logTextView.getLineCount();
-            if (lineCount > 1000) {
-                int cutOff = logTextView.getLayout().getLineEnd(lineCount - 20);
-                CharSequence text = logTextView.getText();
-                text = text.subSequence(cutOff, text.length());
-                logTextView.setText(text);
+            synchronized (listLog) {
+                listLog.add(log);
+                if (listLog.size() > 100) {
+                    listLog.remove(0);
+                }
             }
+            updateView();
+        }
+
+        private void updateView() {
+            StringBuilder stringBuilder = new StringBuilder();
+            android.util.Log.e("NOTI_LISTENER", String.format("updating view: %d", listLog.size()));
+            synchronized (listLog) {
+                for (int i = listLog.size() - 1; i >= 0; --i) {
+                    stringBuilder.append(String.format("%s\n", listLog.get(i)));
+                }
+            }
+            android.util.Log.e("NOTI_LISTENER", String.format("updating view: %s", stringBuilder.toString().substring(0, 10)));
+            logTextView.setText(stringBuilder.toString());
         }
     }
 

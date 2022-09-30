@@ -18,7 +18,7 @@ public class BgValue {
     public void setBgValue(String value, String unit) {
         try {
             if (unit.equals("mmol")) {
-                bgValue = Double.parseDouble(value) * 18.0;
+                bgValue = Double.parseDouble(value) * 18.0 + 0.8;
             } else if (unit == "mgdl") {
                 bgValue = Double.parseDouble(value);
             }

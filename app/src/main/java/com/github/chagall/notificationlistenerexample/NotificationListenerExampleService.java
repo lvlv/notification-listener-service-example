@@ -76,7 +76,7 @@ public class NotificationListenerExampleService extends NotificationListenerServ
         trendMap.put("\u21ca", "DoubleDown");
 
         StatusBarNotification[] activeNotifications = getActiveNotifications();
-        Log.e(TAG, "v09181820 Current active notifications: " + activeNotifications.length);
+        Log.e(TAG, "v09301845 Current active notifications: " + activeNotifications.length);
         for (int i = 0; i < activeNotifications.length; ++i) {
             onNotificationPosted(activeNotifications[i]);
         }
@@ -175,23 +175,18 @@ public class NotificationListenerExampleService extends NotificationListenerServ
         return bgValue;
     }
 
-
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) { }
 
     private int matchNotificationCode(StatusBarNotification sbn) {
         String packageName = sbn.getPackageName();
-
-        Log.e(TAG, "matchNotificationCode: " + packageName);
-
-        if(packageName.equals(ApplicationPackageNames.CGMCARE_PACK_NAME)){
-            return(InterceptedNotificationCode.CGMCARE_CODE);
-        }
-        else if(packageName.equals(ApplicationPackageNames.XDRIP_PACK_NAME)){
-            return(InterceptedNotificationCode.XDRIP_CODE);
-        }
-        else{
-            return(InterceptedNotificationCode.OTHER_NOTIFICATIONS_CODE);
+//        Log.e(TAG, "matchNotificationCode: " + packageName);
+        if (packageName.equals(ApplicationPackageNames.CGMCARE_PACK_NAME)) {
+            return (InterceptedNotificationCode.CGMCARE_CODE);
+        } else if (packageName.equals(ApplicationPackageNames.XDRIP_PACK_NAME)) {
+            return (InterceptedNotificationCode.XDRIP_CODE);
+        } else {
+            return (InterceptedNotificationCode.OTHER_NOTIFICATIONS_CODE);
         }
     }
 }
