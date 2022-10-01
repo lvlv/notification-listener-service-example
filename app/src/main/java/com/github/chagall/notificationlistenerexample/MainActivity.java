@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("com.github.chagall.notificationlistenerexample");
         registerReceiver(logBroadcastReceiver, intentFilter);
+        logBroadcastReceiver.updateView();
     }
 
     @Override
@@ -116,15 +117,16 @@ public class MainActivity extends AppCompatActivity {
             updateView();
         }
 
-        private void updateView() {
+        public void updateView() {
             StringBuilder stringBuilder = new StringBuilder();
-            android.util.Log.e("NOTI_LISTENER", String.format("updating view: %d", listLog.size()));
             synchronized (listLog) {
                 for (int i = listLog.size() - 1; i >= 0; --i) {
                     stringBuilder.append(String.format("%s\n", listLog.get(i)));
                 }
             }
-            android.util.Log.e("NOTI_LISTENER", String.format("updating view: %s", stringBuilder.toString().substring(0, 10)));
+            if (stringBuilder.length() == 0) {
+                stringBuilder.append("v09302235 NO LOG YET");
+            }
             logTextView.setText(stringBuilder.toString());
         }
     }

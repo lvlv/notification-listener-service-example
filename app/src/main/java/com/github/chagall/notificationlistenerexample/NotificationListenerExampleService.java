@@ -76,7 +76,7 @@ public class NotificationListenerExampleService extends NotificationListenerServ
         trendMap.put("\u21ca", "DoubleDown");
 
         StatusBarNotification[] activeNotifications = getActiveNotifications();
-        Log.e(TAG, "v09301845 Current active notifications: " + activeNotifications.length);
+        Log.e(TAG, "v09302235 Current active notifications: " + activeNotifications.length);
         for (int i = 0; i < activeNotifications.length; ++i) {
             onNotificationPosted(activeNotifications[i]);
         }
